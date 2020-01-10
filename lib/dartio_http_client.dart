@@ -16,6 +16,19 @@ class DartIOHttpClient extends SignalRHttpClient {
 
   DartIOHttpClient(Logger logger) : this._logger = logger;
 
+  bool isJsonContentHeader(List contentHeader) {
+    List<String> whiteListContentTypes = [
+      "application/json",
+      "application/json; charset=utf-8"
+    ];
+
+    for (var validContentType in whiteListContentTypes) {
+      if (contentHeader.indexOf(validContentType) != -1) {
+        return true;
+      }
+    }
+  }
+
   Future<SignalRHttpResponse> send(SignalRHttpRequest request) {
     // Check that abort was not signaled before calling send
     if ((request.abortSignal != null) && request.abortSignal.aborted) {
@@ -83,8 +96,8 @@ class DartIOHttpClient extends SignalRHttpClient {
       if ((httpResp.statusCode >= 200) && (httpResp.statusCode < 300)) {
         Object content;
         final contentTypeHeader = httpResp.headers["Content-Type"];
-        final isJsonContent =
-            contentTypeHeader.indexOf("application/json") != -1;
+
+        final isJsonContent = this.isJsonContentHeader(contentTypeHeader);
         if (isJsonContent) {
           content = await utf8.decoder.bind(httpResp).join();
         } else {
